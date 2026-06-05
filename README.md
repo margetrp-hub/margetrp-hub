@@ -1,5 +1,8 @@
 <h1 align="center">Margetrp Hub</h1>
 <p align="center">
+  <img src="./assets/profile-avatar.png" alt="Margetrp Hub avatar" width="168" />
+</p>
+<p align="center">
   Building practical AI workbenches and self-hosted tools.
 </p>
 <p align="center">
