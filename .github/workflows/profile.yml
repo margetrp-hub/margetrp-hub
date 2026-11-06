@@ -1,0 +1,41 @@
+name: Profile content check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: profile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check profile and local assets
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import re
+          root = Path.cwd()
+          text = (root / 'README.md').read_text(encoding='utf-8')
+          assert text.strip(), 'README.md is empty'
+          targets = re.findall(r'!?\[[^\]]*\]\((\./[^)#]+)', text)
+          class Assets(HTMLParser):
+              def handle_starttag(self, tag, attrs):
+                  targets.extend(v for k, v in attrs if k == 'src' and v.startswith('./'))
+          Assets().feed(text)
+          for target in targets:
+              path = (root / target).resolve()
+              assert path.is_relative_to(root), f'Asset escapes repository: {target}'
+              assert path.is_file(), f'Missing profile asset: {target}'
+          print(f'Profile and {len(targets)} local asset references passed')
+          PY
